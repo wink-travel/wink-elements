@@ -1,0 +1,41 @@
+{
+  "name": "@wink/elements",
+  "version": "1.0.0",
+  "description": "TypeScript wrapper for Wink Travel web components — loads the CDN bundle and provides typed interfaces for all custom elements.",
+  "keywords": ["wink", "travel", "web-components", "custom-elements", "angular-elements"],
+  "author": "Wink Travel <support@wink.travel>",
+  "license": "MIT",
+  "homepage": "https://wink.travel",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wink2travel/wink-elements.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wink2travel/wink-elements/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^9.15.0",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
