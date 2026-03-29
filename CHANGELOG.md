@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/wink-travel/wink-elements/compare/v1.0.1...v1.0.2) (2026-03-29)
+
+
+### Bug Fixes
+
+* :wrench: set correct org scope ([d11dabc](https://github.com/wink-travel/wink-elements/commit/d11dabc3c48ab9f36dc4ca5927c6e214f5886974))
+
 ## [1.0.1](https://github.com/wink-travel/wink-elements/compare/v1.0.0...v1.0.1) (2026-03-29)
 
 
