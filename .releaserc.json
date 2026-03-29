@@ -8,7 +8,6 @@
     }],
     ["@semantic-release/npm", {
       "npmPublish": true,
-      "pkgRoot": ".",
       "npmPublishArgs": "--access public"
     }],
     ["@semantic-release/git", {
