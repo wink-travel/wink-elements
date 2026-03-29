@@ -14,10 +14,10 @@
   "homepage": "https://wink.travel",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wink2travel/wink-elements.git"
+    "url": "git+https://github.com/wink-travel/wink-elements.git"
   },
   "bugs": {
-    "url": "https://github.com/wink2travel/wink-elements/issues"
+    "url": "https://github.com/wink-travel/wink-elements/issues"
   },
   "type": "module",
   "main": "./dist/index.js",
