@@ -1,5 +1,5 @@
 {
-  "name": "@wink/elements",
+  "name": "@wink-travel/elements",
   "version": "1.0.1",
   "description": "TypeScript wrapper for Wink Travel web components — loads the CDN bundle and provides typed interfaces for all custom elements.",
   "keywords": [
