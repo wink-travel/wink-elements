@@ -1,7 +1,7 @@
 export interface WinkLoadOptions {
-  /** Your OAuth2 client ID from https://studio.wink.travel */
+  /** Your App client ID from https://my.wink.travel */
   clientId: string;
-  /** Optional customization ID */
+  /** Customization ID from https://my.wink.travel*/
   configurationId?: string;
   /**
    * Base URL of the Wink elements CDN.
