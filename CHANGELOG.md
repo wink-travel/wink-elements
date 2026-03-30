@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/wink-travel/wink-elements/compare/v1.0.2...v1.0.3) (2026-03-30)
+
+
+### Bug Fixes
+
+* :memo: changed comments ([b618672](https://github.com/wink-travel/wink-elements/commit/b61867279da7f1fe7b86d87f6bc180792b851c90))
+
 ## [1.0.2](https://github.com/wink-travel/wink-elements/compare/v1.0.1...v1.0.2) (2026-03-29)
 
 
