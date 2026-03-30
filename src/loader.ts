@@ -1,5 +1,5 @@
 export interface WinkLoadOptions {
-  /** Your App client ID from https://my.wink.travel */
+  /** App client ID from https://my.wink.travel */
   clientId: string;
   /** Customization ID from https://my.wink.travel*/
   configurationId?: string;
