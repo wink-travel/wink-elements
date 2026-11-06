@@ -12,7 +12,7 @@ permissions, the deployment, and its permissions.
 
 | Section    | Defines                                                                                                                                                                                                                      |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Plan       | `WP-EL`: install, check the tag equals the `package.json` version, typecheck, lint, test with coverage, build, then `npm pack`. Publishes the tarball as the `npm package` artifact.                                          |
+| Plan       | `WP-EL`: install, check the tag equals the `package.json` version, typecheck, test with coverage, build, then `npm pack`. Publishes the tarball as the `npm package` artifact.                                          |
 | Deployment | "Elements" → Production, source plan `WP-EL`, runs on build success: downloads the tarball and runs `npm publish ./*.tgz --access public`. It does not check out the repository, so the tagged commit is what ships.        |
 
 ## Releases and triggers (trunk-based)
@@ -35,7 +35,7 @@ permissions, the deployment, and its permissions.
 ## Differences from the exports this was made from
 
 - Plan trigger: polling every 180 s replaced by the tag trigger.
-- Plan tasks: after `npm ci` it now also runs typecheck, lint, test with coverage and build (the
+- Plan tasks: after `npm ci` it now also runs typecheck, test with coverage and build (not lint: the repo has no eslint config yet, so `npm run lint` fails, as it does in GitHub Actions) (the
   export ran only `npm test`), checks the tag against `package.json`, and packs the tarball.
 - Deployment: the checkout, the git identity, the GitHub token and `npx semantic-release` are gone;
   it publishes the packed tarball instead. `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL` and
