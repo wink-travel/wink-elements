@@ -5,6 +5,8 @@ export default defineConfig({
     environment: 'jsdom',
     coverage: {
       provider: 'v8',
+      include: ['src/**'],
+      exclude: ['src/**/*.test.ts'],
       reporter: ['text', 'lcov'],
       thresholds: {
         lines: 80,
