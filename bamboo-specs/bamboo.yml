@@ -93,7 +93,7 @@ Default Job:
       required: true
   artifact-subscriptions: []
 repositories:
-  - Wink Elements:
+  - wink-elements:
       scope: global
 triggers:
   - tag:

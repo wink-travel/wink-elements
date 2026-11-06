@@ -58,8 +58,7 @@ in the build log.
 
 ## Enabling Repository Stored Specs
 
-**Checking this file in does not make it authoritative.** Until the linked repository ("Wink
-Elements") is configured to scan it, the plan stays as configured in the UI, and once it is, a push to
+**Checking this file in does not make it authoritative.** Until the linked repository ("wink-elements") is configured to scan it, the plan stays as configured in the UI, and once it is, a push to
 the tracked branch can reconfigure the live plan on the next scan. Do this deliberately.
 
 1. Check that `NPM_TOKEN` is a masked variable on the deployment project.
