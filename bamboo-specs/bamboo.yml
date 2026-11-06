@@ -1,0 +1,195 @@
+# Bamboo YAML Specs for @wink-travel/elements: build plan WP-EL and its "Elements" deployment
+# project, which publishes the package to npmjs.com.
+#
+# Bamboo only detects a file named bamboo.yml directly in bamboo-specs/ and offers no custom path,
+# so everything lives in this one multi-document file. Read bamboo-specs/README.md before enabling
+# Repository Stored Specs.
+
+# ======================== PRODUCTION (WP) ========================
+# ---- Build plan ----
+# Builds a release tag, never a merge to main: release.bash pushes a bare-semver tag (1.0.4) and the
+# `tag:` trigger below starts the plan. The old polling trigger is gone on purpose, since in
+# trunk-based development every merge lands on main and GitHub Actions (ci.yml) already checks it.
+#
+# `tag:` with `filter:` (a regex on the tag name) is not in the published YAML reference, but Bamboo
+# 12.1.3's validator accepts it and a scan applies it (verified for monorepo-typescript). Keep the
+# filter anchored: it must not match the older v-prefixed tags (v1.0.3) or pre-release tags.
+---
+version: 2
+plan:
+  project-key: WP
+  key: EL
+  name: Elements
+  enabled: true
+  rerunnable: true
+  description: Builds and packs the Web Component loader from a release tag
+stages:
+  - Default Stage:
+      manual: false
+      final: false
+      jobs:
+        - Default Job
+Default Job:
+  key: JOB1
+  other:
+    clean-working-dir: true
+    all-other-apps:
+      custom:
+        auto: {}
+        buildHangingConfig.enabled: 'false'
+  tasks:
+    - checkout:
+        force-clean-build: false
+        description: Checkout Default Repository
+    - any-task:
+        plugin-key: com.atlassian.bamboo.plugins.bamboo-nodejs-plugin:task.builder.npm
+        configuration:
+          isolatedCache: 'false'
+          runtime: Node.js
+          command: ci
+        description: Install
+    - script:
+        interpreter: SHELL
+        scripts:
+          - |-
+            set -euo pipefail
+
+            # The tag must be the version in package.json: release.bash writes both in one commit,
+            # so a mismatch means the tag was pushed by hand or on the wrong commit.
+            tag=$(git describe --tags --exact-match)
+            version=$(node -p "require('./package.json').version")
+            if [ "$tag" != "$version" ]; then
+              echo "ERROR: tag '$tag' does not match package.json version '$version'" >&2
+              exit 1
+            fi
+
+            npm run typecheck
+            npm run lint
+            npm run test:coverage
+            npm run build
+            npm pack
+        description: Verify, build and pack
+  artifacts:
+    - name: npm package
+      pattern: '*.tgz'
+      shared: true
+      required: true
+  artifact-subscriptions: []
+repositories:
+  - Wink Elements:
+      scope: global
+triggers:
+  - tag:
+      filter: '^\d+\.\d+\.\d+$'
+branches:
+  create: manually
+  delete: never
+  link-to-jira: true
+notifications:
+  - events:
+      - plan-failed
+    recipients:
+      - emails:
+          - ankush@unicornh.com
+      - emails:
+          - bjorn+bamboo@wink.travel
+labels: []
+dependencies:
+  require-all-stages-passing: false
+  enabled-for-branches: true
+  block-strategy: none
+  plans: []
+other:
+  concurrent-build-plugin:
+    number-of-concurrent-builds: system-default
+    execution-strategy: block-triggering
+---
+version: 2
+plan:
+  key: WP-EL
+plan-permissions:
+  - users:
+      - admin
+    permissions:
+      - view
+      - edit
+      - build
+      - clone
+      - admin
+      - view-configuration
+      - create-plan-branch
+  - roles:
+      - logged-in
+      - anonymous
+    permissions:
+      - view
+...
+
+# ---- Deployment: publish to npmjs.com ----
+# Publishes the tarball the plan packed from the tagged commit. It does not check out the repository:
+# a checkout would give the tip of main, not the commit the tag points at.
+---
+version: 2
+deployment:
+  name: Elements
+  source-plan: WP-EL
+  description: Makes a release to npmjs.com
+release-naming:
+  next-version-name: release-244
+  applies-to-branches: false
+  auto-increment: true
+  auto-increment-variables: []
+environments:
+  - Production
+Production:
+  description: Publishes the package to npmjs.com
+  triggers:
+    - build-success:
+        description: Successful build
+  tasks:
+    - clean
+    - artifact-download:
+        artifacts:
+          - destination: .
+            name: npm package
+        description: Get the package
+    - script:
+        interpreter: SHELL
+        scripts:
+          - |-
+            set -euo pipefail
+
+            # npm auth: ${bamboo.NPM_TOKEN} is a masked Bamboo variable, never in this file.
+            echo "//registry.npmjs.org/:_authToken=${bamboo.NPM_TOKEN}" > ~/.npmrc
+
+            npm publish ./*.tgz --access public
+        description: Release to npmjs.com
+  final-tasks: []
+  variables: {}
+  requirements: []
+  notifications: []
+---
+version: 2
+deployment:
+  name: Elements
+deployment-permissions:
+  - users:
+      - admin
+    permissions:
+      - view
+      - edit
+      - clone
+      - admin
+      - view-configuration
+      - approve-release
+      - create-release
+environment-permissions:
+  - Production:
+      - users:
+          - admin
+        permissions:
+          - view
+          - edit
+          - deploy
+          - view-configuration
+...

@@ -179,37 +179,22 @@ src/
 
 ---
 
-## Deployment
+## Releasing
 
-### Publishing to npm
-
-The package is published to npm under the `@wink` scope. To release a new version:
+Trunk-based: **`main`** is the only long-lived branch. Every PR targets it, and GitHub Actions checks every PR and every merge. A release is a **tag on `main`**; pushing the tag makes Bamboo build the package and publish it to npm.
 
 ```bash
-# 1. Bump version
-npm version patch   # or minor / major
+git checkout main && git pull
 
-# 2. Build
-npm run build
+# Show the next version and what would happen; changes nothing
+./release.bash --dry-run
 
-# 3. Publish (requires npm token with @wink scope access)
-npm publish --access public
-
-# 4. Push the version tag
-git push --follow-tags
+# Release
+./release.bash
 ```
 
-The `publish-dry-run` CI job validates every PR to catch packaging issues before merge.
+`release.bash` works out the next version from the Conventional Commits since the last release (`feat` is a minor bump, `fix`/`perf`/`revert` a patch, a `!` or `BREAKING CHANGE:` a major), bumps `package.json`, adds the `CHANGELOG.md` entry, commits, tags with the bare version (for example `1.0.4`), pushes the commit and the tag together, and creates the GitHub release. Publishing can take a few minutes to start, because Bamboo polls for new tags.
 
-### CDN URLs
-
-| Environment | URL |
-|---|---|
-| Production | `https://elements.wink.travel` |
-| Staging | `https://staging-elements.wink.travel` |
-
----
-
-## License
-
-MIT © [Wink Travel](https://wink.travel)
+- **Never push a bare-semver tag by hand.** A tag on `main` publishes to npm. Use `./release.bash`.
+- **Hotfixes** go forward on `main` and ship as a new patch release.
+- The Bamboo plan and deployment are defined in [`bamboo-specs/bamboo.yml`](./bamboo-specs/bamboo.yml); see [`bamboo-specs/README.md`](./bamboo-specs/README.md).
