@@ -17,16 +17,16 @@ permissions, the deployment, and its permissions.
 
 ## Releases and triggers (trunk-based)
 
-`main` is the only long-lived branch. A release is a tag.
+`master` is the only long-lived branch. A release is a tag.
 
 - `./release.bash` creates and pushes a bare-semver tag (for example `1.0.4`). The plan's trigger is
   `tag:` with `filter: '^\d+\.\d+\.\d+$'`, which matches bare semver and not the older `v1.0.3` tags or
   pre-release tags such as `1.0.4-rc1`.
-- There is **no polling trigger on `main`** any more. Merges are checked by GitHub Actions
+- There is **no polling trigger on `master`** any more. Merges are checked by GitHub Actions
   (`.github/workflows/ci.yml`); nothing publishes on merge. semantic-release has been removed.
-- A tag build checks out the **tagged commit**, not the tip of `main`. The plan fails if the tag is not
+- A tag build checks out the **tagged commit**, not the tip of `master`. The plan fails if the tag is not
   equal to the `package.json` version (catches a tag pushed by hand) or if the tagged commit is not
-  reachable from `origin/main` (a tag on an unreviewed branch must not ship).
+  reachable from `origin/master` (a tag on an unreviewed branch must not ship).
 - **`tag:` is not in the published YAML reference** (only the Java API has `TagTrigger`). Bamboo
   12.1.3 validates it and a scan applies it (verified on a throwaway plan in `monorepo-typescript`,
   including: a tag build starts within about 3 minutes since it is polling, existing tags do not build
@@ -57,7 +57,7 @@ the tracked branch can reconfigure the live plan on the next scan. Do this delib
 1. Check that `NPM_TOKEN` is a masked variable on the deployment project.
 2. In Bamboo, **Specs** in the top navigation, pick the linked repository, paste `bamboo.yml`,
    **Validate**. Do this before every scan.
-3. Enable Bamboo Specs on the linked repository (tracking `main`) and **scan**.
+3. Enable Bamboo Specs on the linked repository (tracking `master`; change the branch in its settings from `main` if it still says so) and **scan**.
 4. **Know what the first scan does:** it removes the polling trigger and installs the tag trigger.
    Right after it, open the plan's build history: no build should have started for the existing tags
    (they are `v`-prefixed and do not match the filter), and nothing should have been published.

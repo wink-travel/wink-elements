@@ -1,7 +1,7 @@
 ## What & why
 
 <!-- What changed, and the reason. A closing keyword (`Fixes #123`) closes the issue when the PR
-     merges into `main`, the default branch. -->
+     merges into `master`, the default branch. -->
 
 Fixes #
 
@@ -11,6 +11,6 @@ Fixes #
 
 ## Checks
 
-- [ ] Targets `main`
+- [ ] Targets `master`
 - [ ] Conventional commit subject, lowercase (`feat` / `fix` / `perf` / `revert` release a new version)
 - [ ] Tests added or updated; coverage stays ≥ 80%

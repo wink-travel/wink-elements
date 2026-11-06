@@ -7,9 +7,9 @@
 
 # ======================== PRODUCTION (WP) ========================
 # ---- Build plan ----
-# Builds a release tag, never a merge to main: release.bash pushes a bare-semver tag (1.0.4) and the
+# Builds a release tag, never a merge to master: release.bash pushes a bare-semver tag (1.0.4) and the
 # `tag:` trigger below starts the plan. The old polling trigger is gone on purpose, since in
-# trunk-based development every merge lands on main and GitHub Actions (ci.yml) already checks it.
+# trunk-based development every merge lands on master and GitHub Actions (ci.yml) already checks it.
 #
 # `tag:` with `filter:` (a regex on the tag name) is not in the published YAML reference, but Bamboo
 # 12.1.3's validator accepts it and a scan applies it (verified for monorepo-typescript). Keep the
@@ -57,11 +57,11 @@ Default Job:
               exit 1
             fi
 
-            # The tagged commit must be on main: a tag pushed from an unreviewed branch must not ship.
+            # The tagged commit must be on master: a tag pushed from an unreviewed branch must not ship.
             # Fetch from a fixed URL, not the working copy's `origin`, which the checkout controls.
-            git fetch --quiet https://github.com/wink-travel/wink-elements.git main
+            git fetch --quiet https://github.com/wink-travel/wink-elements.git master
             if ! git merge-base --is-ancestor "$tag" FETCH_HEAD; then
-              echo "ERROR: tag '$tag' is not on origin/main" >&2
+              echo "ERROR: tag '$tag' is not on origin/master" >&2
               exit 1
             fi
         description: Verify the release tag
@@ -144,7 +144,7 @@ plan-permissions:
 
 # ---- Deployment: publish to npmjs.com ----
 # Publishes the tarball the plan packed from the tagged commit. It does not check out the repository:
-# a checkout would give the tip of main, not the commit the tag points at.
+# a checkout would give the tip of master, not the commit the tag points at.
 ---
 version: 2
 deployment:

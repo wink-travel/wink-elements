@@ -3,13 +3,13 @@
 #
 # Copyright (c) wink.travel 2026
 #
-# Trunk-based release. `main` is the only long-lived branch; a release is a tag on it.
+# Trunk-based release. `master` is the only long-lived branch; a release is a tag on it.
 #
 #   ./release.bash             # interactive: shows the next version, asks, then releases
 #   ./release.bash --dry-run   # compute and print everything, change nothing
 #   ./release.bash --yes       # no confirmation prompt
 #
-# What it does, in order: checks the working tree and that local main equals origin/main, works out
+# What it does, in order: checks the working tree and that local master equals origin/master, works out
 # the next version from the conventional commits since the latest release tag, bumps package.json
 # and writes the CHANGELOG.md entry in ONE commit (message ends in "[no ci]"), tags that commit with
 # the bare version (for example 1.0.4), and pushes the commit and the tag together. Pushing the tag
@@ -20,12 +20,12 @@
 #
 # Needs: git, gh, node + `npm ci`.
 #
-# RELEASE_BRANCH overrides the branch it releases from (default: main), so the script can be
+# RELEASE_BRANCH overrides the branch it releases from (default: master), so the script can be
 # dry-run from another branch.
 
 set -euo pipefail
 
-RELEASE_BRANCH="${RELEASE_BRANCH:-main}"
+RELEASE_BRANCH="${RELEASE_BRANCH:-master}"
 REPO_URL="https://github.com/wink-travel/wink-elements"
 DRY_RUN=false
 ASSUME_YES=false

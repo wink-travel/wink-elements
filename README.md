@@ -175,16 +175,16 @@ src/
 2. Create a feature branch: `git checkout -b feat/my-change`
 3. Make your changes and ensure tests pass: `npm test`
 4. Commit using [Conventional Commits](https://www.conventionalcommits.org/): `feat: add X`
-5. Open a PR against `main`
+5. Open a PR against `master`
 
 ---
 
 ## Releasing
 
-Trunk-based: **`main`** is the only long-lived branch. Every PR targets it, and GitHub Actions checks every PR and every merge. A release is a **tag on `main`**; pushing the tag makes Bamboo build the package and publish it to npm.
+Trunk-based: **`master`** is the only long-lived branch. Every PR targets it, and GitHub Actions checks every PR and every merge. A release is a **tag on `master`**; pushing the tag makes Bamboo build the package and publish it to npm.
 
 ```bash
-git checkout main && git pull
+git checkout master && git pull
 
 # Show the next version and what would happen; changes nothing
 ./release.bash --dry-run
@@ -195,6 +195,6 @@ git checkout main && git pull
 
 `release.bash` works out the next version from the Conventional Commits since the last release (`feat` is a minor bump, `fix`/`perf`/`revert` a patch, a `!` or `BREAKING CHANGE:` a major), bumps `package.json`, adds the `CHANGELOG.md` entry, commits, tags with the bare version (for example `1.0.4`), pushes the commit and the tag together, and creates the GitHub release. Publishing can take a few minutes to start, because Bamboo polls for new tags.
 
-- **Never push a bare-semver tag by hand.** A tag on `main` publishes to npm. Use `./release.bash`.
-- **Hotfixes** go forward on `main` and ship as a new patch release.
+- **Never push a bare-semver tag by hand.** A tag on `master` publishes to npm. Use `./release.bash`.
+- **Hotfixes** go forward on `master` and ship as a new patch release.
 - The Bamboo plan and deployment are defined in [`bamboo-specs/bamboo.yml`](./bamboo-specs/bamboo.yml); see [`bamboo-specs/README.md`](./bamboo-specs/README.md).
