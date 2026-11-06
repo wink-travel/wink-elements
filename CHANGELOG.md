@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/wink-travel/wink-elements/compare/v1.0.3...1.0.4) (2026-11-06)
+
+
+### Bug Fixes
+
+* name the linked bamboo repository wink-elements (#2) ([34d9ca8](https://github.com/wink-travel/wink-elements/commit/34d9ca8e7a46625485cc281564f152f98eed3da2))
+
 ## [1.0.3](https://github.com/wink-travel/wink-elements/compare/v1.0.2...v1.0.3) (2026-03-30)
 
 
