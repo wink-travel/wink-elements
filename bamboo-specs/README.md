@@ -40,13 +40,21 @@ permissions, the deployment, and its permissions.
   export ran only `npm test`), checks the tag against `package.json`, and packs the tarball.
 - Deployment: the checkout, the git identity, the GitHub token and `npx semantic-release` are gone;
   it publishes the packed tarball instead. `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL` and
-  `GITHUB_PRIVATE_ACCESS_KEY` are no longer used by this deployment and can be removed from it.
+  `GITHUB_PRIVATE_ACCESS_KEY` are no longer used by this deployment and can be removed from the project. Delete `GITHUB_PRIVATE_ACCESS_KEY` and revoke that token on GitHub:
+  the old deployment printed it in clear text in its build log.
 
 ## Secrets are not in these files
 
 | Variable    | Where                                                    |
 | ----------- | -------------------------------------------------------- |
 | `NPM_TOKEN` | the "Elements" deployment project (publish scope; read as `$bamboo_NPM_TOKEN`, never inline, so it stays out of the build log) |
+
+## If a publish fails with `401` / `EINVALIDNPMTOKEN`
+
+`NPM_TOKEN` is expired or revoked (granular npm tokens have a maximum lifetime). Create a new granular
+token with publish access to `@wink-travel/elements`, update the variable on the deployment project, and
+re-run the deployment. Never paste a token inline in a script: Bamboo prints `${bamboo.X}` substitutions
+in the build log.
 
 ## Enabling Repository Stored Specs
 
