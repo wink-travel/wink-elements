@@ -41,6 +41,30 @@ Default Job:
     - checkout:
         force-clean-build: false
         description: Checkout Default Repository
+    - script:
+        interpreter: SHELL
+        scripts:
+          - |-
+            set -euo pipefail
+
+            # Runs before `npm ci` so no repo code executes until the tag is vetted.
+            # The tag must be the version in package.json: release.bash writes both in one commit,
+            # so a mismatch means the tag was pushed by hand or on the wrong commit.
+            tag=$(git describe --tags --exact-match)
+            version=$(node -p "require('./package.json').version")
+            if [ "$tag" != "$version" ]; then
+              echo "ERROR: tag '$tag' does not match package.json version '$version'" >&2
+              exit 1
+            fi
+
+            # The tagged commit must be on main: a tag pushed from an unreviewed branch must not ship.
+            # Fetch from a fixed URL, not the working copy's `origin`, which the checkout controls.
+            git fetch --quiet https://github.com/wink-travel/wink-elements.git main
+            if ! git merge-base --is-ancestor "$tag" FETCH_HEAD; then
+              echo "ERROR: tag '$tag' is not on origin/main" >&2
+              exit 1
+            fi
+        description: Verify the release tag
     - any-task:
         plugin-key: com.atlassian.bamboo.plugins.bamboo-nodejs-plugin:task.builder.npm
         configuration:
@@ -53,22 +77,6 @@ Default Job:
         scripts:
           - |-
             set -euo pipefail
-
-            # The tag must be the version in package.json: release.bash writes both in one commit,
-            # so a mismatch means the tag was pushed by hand or on the wrong commit.
-            tag=$(git describe --tags --exact-match)
-            version=$(node -p "require('./package.json').version")
-            if [ "$tag" != "$version" ]; then
-              echo "ERROR: tag '$tag' does not match package.json version '$version'" >&2
-              exit 1
-            fi
-
-            # The tagged commit must be on main: a tag pushed from an unreviewed branch must not ship.
-            git fetch --quiet origin main
-            if ! git merge-base --is-ancestor "$tag" FETCH_HEAD; then
-              echo "ERROR: tag '$tag' is not on origin/main" >&2
-              exit 1
-            fi
 
             npm run typecheck
             # Lint is left out until the repo has an eslint config: `npm run lint` fails today.
