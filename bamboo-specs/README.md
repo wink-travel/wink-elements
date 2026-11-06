@@ -46,7 +46,7 @@ permissions, the deployment, and its permissions.
 
 | Variable    | Where                                                    |
 | ----------- | -------------------------------------------------------- |
-| `NPM_TOKEN` | the "Elements" deployment project (masked, publish scope) |
+| `NPM_TOKEN` | the "Elements" deployment project (publish scope; read as `$bamboo_NPM_TOKEN`, never inline, so it stays out of the build log) |
 
 ## Enabling Repository Stored Specs
 
