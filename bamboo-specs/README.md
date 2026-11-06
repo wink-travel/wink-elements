@@ -25,7 +25,8 @@ permissions, the deployment, and its permissions.
 - There is **no polling trigger on `main`** any more. Merges are checked by GitHub Actions
   (`.github/workflows/ci.yml`); nothing publishes on merge. semantic-release has been removed.
 - A tag build checks out the **tagged commit**, not the tip of `main`. The plan fails if the tag is not
-  equal to the `package.json` version, which catches a tag pushed by hand.
+  equal to the `package.json` version (catches a tag pushed by hand) or if the tagged commit is not
+  reachable from `origin/main` (a tag on an unreviewed branch must not ship).
 - **`tag:` is not in the published YAML reference** (only the Java API has `TagTrigger`). Bamboo
   12.1.3 validates it and a scan applies it (verified on a throwaway plan in `monorepo-typescript`,
   including: a tag build starts within about 3 minutes since it is polling, existing tags do not build

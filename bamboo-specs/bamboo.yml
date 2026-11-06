@@ -63,6 +63,13 @@ Default Job:
               exit 1
             fi
 
+            # The tagged commit must be on main: a tag pushed from an unreviewed branch must not ship.
+            git fetch --quiet origin main
+            if ! git merge-base --is-ancestor "$tag" FETCH_HEAD; then
+              echo "ERROR: tag '$tag' is not on origin/main" >&2
+              exit 1
+            fi
+
             npm run typecheck
             # Lint is left out until the repo has an eslint config: `npm run lint` fails today.
             # Plain `npm test`, as before: `npm run test:coverage` fails today (loader.ts branch
@@ -161,8 +168,12 @@ Production:
           - |-
             set -euo pipefail
 
-            # npm auth: ${bamboo.NPM_TOKEN} is a masked Bamboo variable, never in this file.
-            echo "//registry.npmjs.org/:_authToken=${bamboo.NPM_TOKEN}" > ~/.npmrc
+            # npm auth: ${bamboo.NPM_TOKEN} is a masked Bamboo variable, never in this file. The
+            # token goes in a per-run file in the working directory, not ~/.npmrc on the shared
+            # agent, and is removed when the script ends.
+            export NPM_CONFIG_USERCONFIG="$PWD/.npmrc"
+            trap 'rm -f "$NPM_CONFIG_USERCONFIG"' EXIT
+            ( umask 077; echo "//registry.npmjs.org/:_authToken=${bamboo.NPM_TOKEN}" > "$NPM_CONFIG_USERCONFIG" )
 
             npm publish ./*.tgz --access public
         description: Release to npmjs.com
