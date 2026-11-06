@@ -1,19 +1,41 @@
 # Bamboo Specs
 
-YAML specs for the Bamboo build plan `WP-EL` and the "Elements" deployment project that publish
-`@wink-travel/elements` to npmjs.com. They are the exports of the live plan and deployment, adapted
+YAML specs for the Bamboo plans and deployment projects that publish `@wink-travel/elements` to
+npmjs.com: staging `WS-EL` (release candidates, `next`) and production `WP-EL` (releases, `latest`). They are the exports of the live plan and deployment, adapted
 for trunk-based releases. Same layout and conventions as `monorepo-typescript/bamboo-specs`.
 
 ## Layout
 
 [`bamboo.yml`](./bamboo.yml) is the only spec file, on purpose: Bamboo reads YAML specs from a root
-`bamboo.yml` in `bamboo-specs/` and offers no custom path. It holds four YAML documents: the plan, its
-permissions, the deployment, and its permissions.
+`bamboo.yml` in `bamboo-specs/` and offers no custom path. It holds eight YAML documents: for each of staging and
+production, the plan, its permissions, the deployment, and its permissions.
 
 | Section    | Defines                                                                                                                                                                                                                      |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Plan       | `WP-EL`: install, check the tag equals the `package.json` version, typecheck, test, build, then `npm pack`. Publishes the tarball as the `npm package` artifact.                                          |
-| Deployment | "Elements" → Production, source plan `WP-EL`, runs on build success: downloads the tarball and runs `npm publish ./*.tgz --access public`. It does not check out the repository, so the tagged commit is what ships.        |
+| Staging    | Plan `WS-EL` polls `master`: install, typecheck, test, build, version as `X.Y.Z-rc.<build number>` (`X.Y.Z` is what `release.bash` would pick next), `npm pack`. Deployment "Staging Elements" → Staging publishes the tarball with `npm publish --tag next`. |
+| Production | Plan `WP-EL`: install, check the tag equals the `package.json` version, typecheck, test, build, then `npm pack`. Publishes the tarball as the `npm package` artifact.                                          |
+| Production | Deployment "Elements" → Production, source plan `WP-EL`, runs on build success: downloads the tarball and runs `npm publish ./*.tgz --access public`. It does not check out the repository, so the tagged commit is what ships.        |
+
+## Release candidates (staging)
+
+Every merge to `master` publishes a release candidate, so users can try unreleased changes:
+
+```bash
+npm i @wink-travel/elements@next
+```
+
+- The version is `X.Y.Z-rc.<Bamboo build number>`. It is set in the build only: nothing is committed
+  and **no git tag is created**. A tag like `1.0.4-rc.1` would match the "Protect release tags" ruleset
+  (its glob `[0-9]*.[0-9]*.[0-9]*` also matches suffixes) and be refused to everyone but admins.
+- It is published with `--tag next`, so the `latest` dist-tag, and everyone who installs the package
+  normally, is untouched. Merges with no releasable commit (docs, chore) still produce a candidate, with
+  a patch bump, so it always sorts above the last release.
+- These versions are on the public registry for good: an npm version cannot be unpublished and reused.
+  The release commit from `release.bash` also builds a candidate (the polling trigger may not honour
+  `[no ci]`); it is harmless but noisy.
+- The wrapper loads its CDN bundle from `https://elements.wink.travel` by default; a candidate changes the
+  wrapper only.
+- It uses the same `NPM_TOKEN` as production, set on the "Staging Elements" deployment project too.
 
 ## Releases and triggers (trunk-based)
 
@@ -22,8 +44,8 @@ permissions, the deployment, and its permissions.
 - `./release.bash` creates and pushes a bare-semver tag (for example `1.0.4`). The plan's trigger is
   `tag:` with `filter: '^\d+\.\d+\.\d+$'`, which matches bare semver and not the older `v1.0.3` tags or
   pre-release tags such as `1.0.4-rc1`.
-- There is **no polling trigger on `master`** any more. Merges are checked by GitHub Actions
-  (`.github/workflows/ci.yml`); nothing publishes on merge. semantic-release has been removed.
+- The **production** plan has no polling trigger on `master` any more; the staging plan does. Merges are checked by GitHub Actions
+  (`.github/workflows/ci.yml`); a merge publishes only a `next` candidate, never `latest`. semantic-release has been removed.
 - A tag build checks out the **tagged commit**, not the tip of `master`. The plan fails if the tag is not
   equal to the `package.json` version (catches a tag pushed by hand) or if the tagged commit is not
   reachable from `origin/master` (a tag on an unreviewed branch must not ship).
@@ -47,7 +69,7 @@ permissions, the deployment, and its permissions.
 
 | Variable    | Where                                                    |
 | ----------- | -------------------------------------------------------- |
-| `NPM_TOKEN` | the "Elements" deployment project (publish scope; read as `$bamboo_NPM_TOKEN`, never inline, so it stays out of the build log) |
+| `NPM_TOKEN` | the "Elements" and "Staging Elements" deployment projects (publish scope; read as `$bamboo_NPM_TOKEN`, never inline, so it stays out of the build log) |
 
 ## If a publish fails with `401` / `EINVALIDNPMTOKEN`
 

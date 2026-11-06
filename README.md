@@ -196,5 +196,6 @@ git checkout master && git pull
 `release.bash` works out the next version from the Conventional Commits since the last release (`feat` is a minor bump, `fix`/`perf`/`revert` a patch, a `!` or `BREAKING CHANGE:` a major), bumps `package.json`, adds the `CHANGELOG.md` entry, commits, tags with the bare version (for example `1.0.4`), pushes the commit and the tag together, and creates the GitHub release. Publishing can take a few minutes to start, because Bamboo polls for new tags.
 
 - **Never push a bare-semver tag by hand.** A tag on `master` publishes to npm. Use `./release.bash`.
+- **Release candidates:** every merge to `master` publishes `X.Y.Z-rc.N` to npm under the `next` tag. Try it with `npm i @wink-travel/elements@next`; `latest` only moves on a release.
 - **Hotfixes** go forward on `master` and ship as a new patch release.
 - The Bamboo plan and deployment are defined in [`bamboo-specs/bamboo.yml`](./bamboo-specs/bamboo.yml); see [`bamboo-specs/README.md`](./bamboo-specs/README.md).

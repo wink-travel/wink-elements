@@ -1,9 +1,200 @@
-# Bamboo YAML Specs for @wink-travel/elements: build plan WP-EL and its "Elements" deployment
-# project, which publishes the package to npmjs.com.
+# Bamboo YAML Specs for @wink-travel/elements: staging plan WS-EL (release candidates published as
+# `next`) and production plan WP-EL (release tags published as `latest`), each with a deployment.
 #
 # Bamboo only detects a file named bamboo.yml directly in bamboo-specs/ and offers no custom path,
 # so everything lives in this one multi-document file. Read bamboo-specs/README.md before enabling
 # Repository Stored Specs.
+
+# ======================== STAGING (WS) ========================
+# ---- Build plan ----
+# Polls master: every merge builds a release candidate, X.Y.Z-rc.<build number>, where X.Y.Z is the
+# version release.bash would pick next. The deployment below publishes it to npm under the `next`
+# dist-tag, so `npm i @wink-travel/elements@next` gets it and `latest` is never touched. No git tag
+# and no commit: the version is set in the build only, and a tag would match the "Protect release
+# tags" ruleset and start the production plan (its filter would not match an -rc tag, but the ruleset would block the push).
+---
+version: 2
+plan:
+  project-key: WS
+  key: EL
+  name: Elements
+  enabled: true
+  rerunnable: true
+  description: Builds a release candidate of the Web Component loader from every merge to master
+stages:
+  - Default Stage:
+      manual: false
+      final: false
+      jobs:
+        - Default Job
+Default Job:
+  key: JOB1
+  other:
+    clean-working-dir: true
+    all-other-apps:
+      custom:
+        auto: {}
+        buildHangingConfig.enabled: 'false'
+  tasks:
+    - checkout:
+        force-clean-build: false
+        description: Checkout Default Repository
+    - any-task:
+        plugin-key: com.atlassian.bamboo.plugins.bamboo-nodejs-plugin:task.builder.npm
+        configuration:
+          isolatedCache: 'false'
+          runtime: Node.js
+          command: ci
+        description: Install
+    - script:
+        interpreter: SHELL
+        scripts:
+          - |-
+            set -euo pipefail
+
+            npm run typecheck
+            # Lint and coverage are left out for the same reasons as in the production plan.
+            npm test
+            npm run build
+
+            # The version needs the commit history and the release tags.
+            if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
+              git fetch --quiet --unshallow https://github.com/wink-travel/wink-elements.git master
+            fi
+            git fetch --quiet --tags https://github.com/wink-travel/wink-elements.git
+
+            rc=$(node scripts/release-cli.mjs rc-version "${bamboo.buildNumber}")
+            echo "Release candidate: $rc"
+            npm version "$rc" --no-git-tag-version
+            npm pack
+        description: Verify, version as a release candidate and pack
+  artifacts:
+    - name: npm package
+      pattern: '*.tgz'
+      shared: true
+      required: true
+  artifact-subscriptions: []
+repositories:
+  - wink-elements:
+      scope: global
+triggers:
+  - polling:
+      period: '180'
+branches:
+  create: manually
+  delete: never
+  link-to-jira: true
+notifications:
+  - events:
+      - plan-failed
+    recipients:
+      - emails:
+          - ankush@unicornh.com
+      - emails:
+          - bjorn+bamboo@wink.travel
+labels: []
+dependencies:
+  require-all-stages-passing: false
+  enabled-for-branches: true
+  block-strategy: none
+  plans: []
+other:
+  concurrent-build-plugin:
+    number-of-concurrent-builds: system-default
+    execution-strategy: block-triggering
+---
+version: 2
+plan:
+  key: WS-EL
+plan-permissions:
+  - users:
+      - admin
+    permissions:
+      - view
+      - edit
+      - build
+      - clone
+      - admin
+      - view-configuration
+      - create-plan-branch
+  - roles:
+      - logged-in
+      - anonymous
+    permissions:
+      - view
+...
+
+# ---- Deployment: publish the release candidate to npmjs.com as `next` ----
+---
+version: 2
+deployment:
+  name: Staging Elements
+  source-plan: WS-EL
+  description: Publishes release candidates to npmjs.com under the next dist-tag
+release-naming:
+  next-version-name: rc-1
+  applies-to-branches: false
+  auto-increment: true
+  auto-increment-variables: []
+environments:
+  - Staging
+Staging:
+  description: Publishes the release candidate to npmjs.com as next
+  triggers:
+    - build-success:
+        description: Successful build
+  tasks:
+    - clean
+    - artifact-download:
+        artifacts:
+          - destination: .
+            name: npm package
+        description: Get the package
+    - script:
+        interpreter: SHELL
+        scripts:
+          - |-
+            set -euo pipefail
+
+            # See the production deployment: the token is read from the environment so it stays out
+            # of the build log, and goes in a per-run file that is removed when the script ends.
+            export NPM_CONFIG_USERCONFIG="$PWD/.npmrc"
+            trap 'rm -f "$NPM_CONFIG_USERCONFIG"' EXIT
+            ( umask 077; echo "//registry.npmjs.org/:_authToken=${bamboo_NPM_TOKEN:?NPM_TOKEN is not set}" > "$NPM_CONFIG_USERCONFIG" )
+
+            # --tag next: publishing a prerelease version without a tag is refused, and it must never
+            # become `latest`.
+            npm publish ./*.tgz --access public --tag next
+        description: Publish to npmjs.com as next
+  final-tasks: []
+  variables: {}
+  requirements: []
+  notifications: []
+---
+version: 2
+deployment:
+  name: Staging Elements
+deployment-permissions:
+  - users:
+      - admin
+    permissions:
+      - view
+      - edit
+      - clone
+      - admin
+      - view-configuration
+      - approve-release
+      - create-release
+environment-permissions:
+  - Staging:
+      - users:
+          - admin
+        permissions:
+          - view
+          - edit
+          - deploy
+          - view-configuration
+...
 
 # ======================== PRODUCTION (WP) ========================
 # ---- Build plan ----
