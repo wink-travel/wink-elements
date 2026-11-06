@@ -1,10 +1,11 @@
 // CLI used by release.bash. Reads the commits since a tag from git; changes nothing itself.
 //   node scripts/release-cli.mjs next-version <previousTag>
+//   node scripts/release-cli.mjs rc-version <buildNumber>   (staging: X.Y.Z-rc.<buildNumber>)
 //   node scripts/release-cli.mjs changelog <version> <previousTag> <repoUrl>
 // An empty <previousTag> means "all history".
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { nextBump, nextVersion, renderChangelogEntry } from './release-lib.mjs';
+import { latestReleaseTag, nextBump, nextVersion, rcVersion, renderChangelogEntry } from './release-lib.mjs';
 
 function commitsSince(tag) {
   const range = tag ? [`${tag}..HEAD`] : [];
@@ -32,6 +33,11 @@ if (command === 'next-version') {
     process.exit(1);
   }
   console.log(nextVersion(current, bump));
+} else if (command === 'rc-version') {
+  const [buildNumber = ''] = args;
+  const current = JSON.parse(readFileSync('package.json', 'utf8')).version;
+  const tags = execFileSync('git', ['tag', '--list'], { encoding: 'utf8' }).split('\n');
+  console.log(rcVersion(current, commitsSince(latestReleaseTag(tags)), buildNumber));
 } else if (command === 'changelog') {
   const [version, previousTag = '', repoUrl] = args;
   if (!version || !repoUrl) {

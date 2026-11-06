@@ -14,6 +14,8 @@ Trunk-based development: `master` is the only long-lived branch.
   bumps `package.json`, writes the `CHANGELOG.md` entry, commits, tags, pushes the commit and the tag
   together, and creates the GitHub release. Bamboo builds the tag and publishes to npm. See
   [bamboo-specs/README.md](./bamboo-specs/README.md).
+- **Release candidates**: every merge to `master` publishes `X.Y.Z-rc.N` to npm as `next` (Bamboo plan
+  `WS-EL`, no git tag). `latest` only moves on a release.
 - **Hotfixes**: fix forward on `master` and release a new patch version.
 - **IMPORTANT**: never push a bare-semver tag (`MAJOR.MINOR.PATCH`) by hand: a tag on `master` publishes
   to npm. Use `./release.bash`.

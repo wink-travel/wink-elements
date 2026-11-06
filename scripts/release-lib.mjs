@@ -69,3 +69,25 @@ export function renderChangelogEntry({ version, previousTag, date, repoUrl, comm
   blocks.push(breaking.length ? `### BREAKING CHANGES\n\n${breaking.join('\n')}` : null);
   return `${heading}\n\n\n${blocks.filter(Boolean).join('\n\n')}\n`;
 }
+
+const compareSemver = (a, b) => {
+  const [x, y] = [a, b].map((tag) => tag.replace(/^v/, '').split('.').map(Number));
+  return x[0] - y[0] || x[1] - y[1] || x[2] - y[2];
+};
+
+function highest(tags, pattern) {
+  return tags.filter((tag) => pattern.test(tag)).sort(compareSemver).at(-1) ?? '';
+}
+
+// The tag the next release is measured from: the highest bare-semver tag, or, before the first
+// trunk-based release, the highest v-prefixed tag (v1.0.3).
+export function latestReleaseTag(tags) {
+  return highest(tags, /^\d+\.\d+\.\d+$/) || highest(tags, /^v\d+\.\d+\.\d+$/);
+}
+
+// A release-candidate version for staging: the version the next release would have, plus -rc.<build>.
+// Without releasable commits it still bumps the patch, so the candidate sorts above the last release.
+export function rcVersion(current, commits, buildNumber) {
+  if (!/^\d+$/.test(buildNumber)) throw new Error(`"${buildNumber}" is not a numeric build number`);
+  return `${nextVersion(current, nextBump(commits) ?? 'patch')}-rc.${buildNumber}`;
+}

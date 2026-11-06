@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  latestReleaseTag,
   nextBump,
   nextVersion,
   parseCommit,
+  rcVersion,
   renderChangelogEntry,
 } from './release-lib.mjs';
 
@@ -88,5 +90,29 @@ describe('renderChangelogEntry', () => {
   it('lists breaking changes', () => {
     const out = renderChangelogEntry({ ...args, commits: [commit('feat!: drop it', 'BREAKING CHANGE: api removed')] });
     expect(out).toContain('### BREAKING CHANGES');
+  });
+});
+
+describe('latestReleaseTag', () => {
+  it('prefers the highest bare-semver tag, comparing numerically', () => {
+    expect(latestReleaseTag(['1.0.9', '1.0.10', 'v2.0.0', '1.0.2-rc.1'])).toBe('1.0.10');
+  });
+  it('falls back to the highest v-prefixed tag before the first trunk-based release', () => {
+    expect(latestReleaseTag(['v1.0.2', 'v1.0.3', 'nonsense'])).toBe('v1.0.3');
+  });
+  it('is empty when there are no release tags', () => {
+    expect(latestReleaseTag(['foo'])).toBe('');
+  });
+});
+
+describe('rcVersion', () => {
+  it('uses the bump from releasable commits', () => {
+    expect(rcVersion('1.0.3', [commit('feat: a')], '12')).toBe('1.1.0-rc.12');
+  });
+  it('falls back to a patch bump when nothing is releasable', () => {
+    expect(rcVersion('1.0.3', [commit('docs: a')], '7')).toBe('1.0.4-rc.7');
+  });
+  it('requires a numeric build number', () => {
+    expect(() => rcVersion('1.0.3', [], 'x')).toThrow(/build number/);
   });
 });
